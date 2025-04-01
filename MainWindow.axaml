@@ -1,0 +1,21 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="Module4.MainWindow"
+        Title="Валидация данных"
+        Height="200" Width="600" WindowStartupLocation="CenterScreen">
+    <Grid ColumnDefinitions="*,*" RowDefinitions="*,*">
+        <Button Grid.Column="0" Grid.Row="0" Width="210" 
+                HorizontalAlignment="Center" HorizontalContentAlignment="Center"  
+                Content="Получить данные" Click="GetDataFromApi_OnClick"></Button>
+        <TextBlock Name="DataFromApiTextBlock" Grid.Column="1" Grid.Row="0" VerticalAlignment="Center" 
+                   HorizontalAlignment="Center"></TextBlock>
+        <Button Grid.Column="0" Grid.Row="1" Width="210" HorizontalAlignment="Center" 
+                HorizontalContentAlignment="Center"
+                Content="Отправить результат теста" Click="WriteInDoc_OnClick"></Button>
+        <TextBlock Name="TestResultTextBlock" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" 
+                   HorizontalAlignment="Center"></TextBlock>
+    </Grid>
+</Window>
