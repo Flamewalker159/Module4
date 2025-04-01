@@ -22,7 +22,7 @@ public partial class MainWindow : Window
     private async void GetDataFromApi_OnClick(object? sender, RoutedEventArgs e)
     {
         var httpClient = new HttpClient();
-        var url = "";
+        var url = "fullName";
         try
         {
             var response = await httpClient.GetStringAsync($"http://127.0.0.1:4444/TransferSimulator/{url}");
@@ -38,9 +38,9 @@ public partial class MainWindow : Window
 
     private void WriteInDoc_OnClick(object? sender, RoutedEventArgs e)
     {
-        var regex = @"";
+        var regex = @"[^А-Яа-яЁё\s]";
         var validationResult = Regex.IsMatch(_dataFromApi, regex);
-        TestResultTextBlock.Text = validationResult ? "содержит запрещенные символы" : "не содержит запрещенные символы";
+        TestResultTextBlock.Text = validationResult ? "ФИО содержит запрещенные символы" : "ФИО не содержит запрещенные символы";
         try
         {
             using var doc = WordprocessingDocument.Open("ТестКейс.docx", true); 
