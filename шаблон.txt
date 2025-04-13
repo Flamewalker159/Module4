@@ -178,7 +178,7 @@ public partial class MainWindow : Window
         //FIO
         //var regex = @"[^А-Яа-яЁё\s]";
         //identityCard
-        //var regex = @"[0-9]{2} [0-9]{2} [0-9]{6}";
+        //var regex = @"^[0-9]{2} [0-9]{2} [0-9]{6}$";
         //inn
         //var regex = @"^\d{10}$";
         //mobilephone
