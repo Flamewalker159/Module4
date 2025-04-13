@@ -38,7 +38,7 @@ public partial class MainWindow : Window
 
     private void WriteInDoc_OnClick(object? sender, RoutedEventArgs e)
     {
-        const string regex = @"[0-9]{2} [0-9]{2} [0-9]{6}";
+        const string regex = @"^[0-9]{2} [0-9]{2} [0-9]{6}$";
         var validationResult = Regex.IsMatch(_dataFromApi, regex);
         TestResultTextBlock.Text = validationResult ? "не содержит запрещенные символы" : "содержит запрещенные символы";
         try
@@ -61,8 +61,8 @@ public partial class MainWindow : Window
     {
         foreach (var text in document.Descendants<Text>())
         {
-            if(text.Text.Contains(replaceText))
-                text.Text = text.Text.Replace(replaceText, validationResult ? "Успешно" : "Не успешно");
+            if(text.Text == replaceText)
+                text.Text = validationResult ? "Успешно" : "Не успешно";
             document.Save();
         }
     }
