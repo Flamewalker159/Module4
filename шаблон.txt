@@ -220,14 +220,14 @@ public partial class MainWindow : Window
     }
 
     private static void ReplaceText(string replaceText, bool validationResult, Document document)
+    {
+        foreach (var text in document.Descendants<Text>())
         {
-            foreach (var text in document.Descendants<Text>())
-            {
-                if(text.Text == replaceText)
-                    text.Text = validationResult ? "Успешно" : "Не успешно";
-                document.Save();
-            }
+            if(text.Text == replaceText)
+                text.Text = validationResult ? "Успешно" : "Не успешно";
+            document.Save();
         }
+    }
 }
 
 <Window xmlns="https://github.com/avaloniaui"
