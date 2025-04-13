@@ -61,8 +61,8 @@ public partial class MainWindow : Window
     {
         foreach (var text in document.Descendants<Text>())
         {
-            if(text.Text.Contains(replaceText))
-                text.Text = text.Text.Replace(replaceText, validationResult ? "Успешно" : "Не успешно");
+            if(text.Text == replaceText)
+                text.Text = validationResult ? "Успешно" : "Не успешно";
             document.Save();
         }
     }

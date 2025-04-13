@@ -1,0 +1,253 @@
+https://duckduckgo.com/?q=DuckDuckGo+AI+Chat&ia=chat&duckai=1
+https://labs.perplexity.ai/
+https://github.com/Flamewalker159/Module4.git
+-- 📦 СОЗДАНИЕ ТАБЛИЦ
+
+-- Таблица: Гости
+CREATE TABLE guests (
+    guest_id SERIAL PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    birth_date DATE,
+    phone VARCHAR(20),
+    email VARCHAR(100) UNIQUE,
+    passport_number CHAR(10),
+    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Таблица: Типы номеров
+CREATE TABLE room_types (
+    room_type_id SERIAL PRIMARY KEY,
+    type_name VARCHAR(50),
+    price_per_night NUMERIC(10, 2)
+);
+
+-- Таблица: Номера
+CREATE TABLE rooms (
+    room_id SERIAL PRIMARY KEY,
+    room_number VARCHAR(10) UNIQUE NOT NULL,
+    room_type_id INT REFERENCES room_types(room_type_id),
+    status VARCHAR(20) CHECK (status IN ('Свободен', 'Занят', 'Назначен к уборке', 'Чистый', 'Грязный'))
+);
+
+-- Таблица: Сотрудники
+CREATE TABLE employees (
+    employee_id SERIAL PRIMARY KEY,
+    full_name VARCHAR(100),
+    role VARCHAR(50),
+    hire_date DATE
+);
+
+-- Таблица: Бронирования
+CREATE TABLE bookings (
+    booking_id SERIAL PRIMARY KEY,
+    guest_id INT REFERENCES guests(guest_id),
+    room_id INT REFERENCES rooms(room_id),
+    check_in_date DATE,
+    check_out_date DATE,
+    total_amount NUMERIC(10, 2),
+    payment_status BOOLEAN DEFAULT FALSE
+);
+
+-- Таблица: Уборка
+CREATE TABLE cleaning (
+    cleaning_id SERIAL PRIMARY KEY,
+    room_id INT REFERENCES rooms(room_id),
+    employee_id INT REFERENCES employees(employee_id),
+    cleaning_date DATE,
+    status VARCHAR(20) CHECK (status IN ('Назначена', 'Выполнена'))
+);
+
+-- 📊 АГРЕГАТНЫЕ ЗАПРОСЫ С ФОРМУЛАМИ
+
+-- 1. Процент загрузки номерного фонда
+-- (кол-во занятых ночей / общее количество ночей * 100)
+SELECT 
+    ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM rooms), 2) AS occupancy_percent
+FROM bookings
+WHERE CURRENT_DATE BETWEEN check_in_date AND check_out_date;
+
+-- 2. ADR (средняя стоимость номера за период)
+SELECT 
+    ROUND(SUM(total_amount) / SUM(DATE_PART('day', check_out_date - check_in_date)), 2) AS adr
+FROM bookings;
+
+-- 3. RevPAR = ADR * Процент загрузки
+WITH 
+    stats AS (
+        SELECT 
+            SUM(total_amount) AS revenue,
+            SUM(DATE_PART('day', check_out_date - check_in_date)) AS nights_sold,
+            (SELECT COUNT(*) FROM rooms) AS total_rooms
+        FROM bookings
+    )
+SELECT 
+    ROUND((revenue / total_rooms), 2) AS revpar
+FROM stats;
+
+-- 🛠 ВСТАВКА ДАННЫХ
+
+INSERT INTO guests (full_name, birth_date, phone, email, passport_number)
+VALUES ('Петров Иван', '1990-01-01', '+7 999 123-45-67', 'ivan@example.com', '1234567890');
+
+INSERT INTO room_types (type_name, price_per_night)
+VALUES ('Одноместный', 2500.00), ('Двухместный', 4000.00);
+
+INSERT INTO rooms (room_number, room_type_id, status)
+VALUES ('101', 1, 'Свободен'), ('102', 2, 'Грязный');
+
+INSERT INTO employees (full_name, role, hire_date)
+VALUES ('Сидорова Мария', 'Уборщица', '2022-06-01');
+
+INSERT INTO bookings (guest_id, room_id, check_in_date, check_out_date, total_amount, payment_status)
+VALUES (1, 1, '2025-04-01', '2025-04-05', 10000.00, TRUE);
+
+INSERT INTO cleaning (room_id, employee_id, cleaning_date, status)
+VALUES (2, 1, '2025-04-06', 'Выполнена');
+
+📌 Специальные символы:
+.     - Любой символ, кроме новой строки (например: a.c → abc, a1c)
+^     - Начало строки (например: ^abc → abc123, но не 123abc)
+$     - Конец строки (например: abc$ → 123abc)
+[]    - Один из символов (например: [abc] → a или b или c)
+[^]   - Любой символ, кроме указанных (например: [^0-9] → не цифра)
+-     - Диапазон (например: [0-9] → цифры от 0 до 9)
+()    - Группа символов (например: (abc){2} → abcabc)
+|     - Или (например: abc|123 → abc или 123)
+
+🔢 Квантификаторы:
+*     - 0 или больше повторений (например: a* → "", a, aa...)
++     - 1 или больше (например: a+ → a, aa...)
+?     - 0 или 1 раз (например: a? → "" или a)
+{n}   - Ровно n повторений (например: a{3} → aaa)
+{n,}  - Не меньше n (например: a{2,} → aa, aaa...)
+{n,m} - От n до m повторений (например: a{2,4} → aa, aaa, aaaa)
+
+🔠 Классы символов:
+\d   - Цифра (равно [0-9])
+\D   - НЕ цифра
+\w   - Буква, цифра или _ (равно [A-Za-z0-9_])
+\W   - Всё кроме \w
+\s   - Пробел, табуляция и т.д.
+\S   - НЕ пробельный символ
+📅 Дата (формат ДД.ММ.ГГГГ)
+var regex = @"^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(19|20)\d{2}$";
+🔢 Паспорт РФ (серия и номер без пробелов: 10 цифр)
+var regex = @"^\d{10}$";
+📁 Номер ИСХ. документа (например, "ИСХ-1234/А")
+var regex = @"^ИСХ-\d{4}/[А-ЯA-Z]$";
+🧾 Номер ОГРН (13 цифр)
+var regex = @"^\d{13}$";
+💳 Номер банковской карты (16 цифр через пробелы или без)
+var regex = @"^(\d{4}\s?){4}$";
+🌐 URL
+var regex = @"^(https?:\/\/)?([\w\-]+\.)+[\w\-]{2,}(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$";
+🔐 Надёжный пароль (минимум 8 символов, минимум 1 буква, 1 цифра и 1 спецсимвол)
+var regex = @"^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$";
+🚗 Номер автомобиля РФ (например, А123ВС 77)
+var regex = @"^[А-Я]{1}\d{3}[А-Я]{2}\s?\d{2,3}$";
+💼 ИНН физ. лица (10 цифр) или юр. лица (12 цифр)
+var regex = @"^\d{10}(\d{2})?$";
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Text.RegularExpressions;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
+using Newtonsoft.Json;
+
+namespace Module4;
+
+public partial class MainWindow : Window
+{
+    private string _dataFromApi = "";
+    public MainWindow()
+    {
+        InitializeComponent();
+    }
+    
+    private async void GetDataFromApi_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var httpClient = new HttpClient();
+        const string url = "";
+        //email
+        //var regex = @"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$";
+        //FIO
+        //var regex = @"[^А-Яа-яЁё\s]";
+        //identityCard
+        //var regex = @"[0-9]{2} [0-9]{2} [0-9]{6}";
+        //inn
+        //var regex = @"^\d{10}$";
+        //mobilephone
+        //var regex = @"^\+[0-9]+\s[0-9]{3}\s[0-9]{3}-[0-9]{2}-[0-9]{2}$";
+        //snils
+        //var regex = @"^[0-9]{3}-[0-9]{3}-[0-9]{3}\s[0-9]{2}$";
+        try
+        {
+            var response = await httpClient.GetStringAsync($"http://127.0.0.1:4444/TransferSimulator/{url}");
+            var data = JsonConvert.DeserializeObject<Dictionary<string,string>>(response);
+            _dataFromApi = data!["value"];
+            DataFromApiTextBlock.Text = _dataFromApi;
+        }
+        catch (Exception ex)
+        {
+            DataFromApiTextBlock.Text = ex.Message;
+        }
+    }
+
+    private void WriteInDoc_OnClick(object? sender, RoutedEventArgs e)
+    {
+        const string regex = @"";
+        var validationResult = Regex.IsMatch(_dataFromApi, regex);
+        TestResultTextBlock.Text = validationResult ? "не содержит запрещенные символы" : "содержит запрещенные символы";
+        try
+        {
+            using var doc = WordprocessingDocument.Open("ТестКейс.docx", true); 
+            var document = doc.MainDocumentPart!.Document;
+
+            if (document.Descendants<Text>().FirstOrDefault(t => t.Text.Contains("Result 1")) != null)
+                ReplaceText("Result 1", validationResult, document);
+            else if(document.Descendants<Text>().FirstOrDefault(t => t.Text.Contains("Result 2")) != null)
+                ReplaceText("Result 2", validationResult, document);
+        }
+        catch (Exception ex)
+        {
+            TestResultTextBlock.Text = ex.Message;
+        }
+    }
+
+    private static void ReplaceText(string replaceText, bool validationResult, Document document)
+        {
+            foreach (var text in document.Descendants<Text>())
+            {
+                if(text.Text == replaceText)
+                    text.Text = validationResult ? "Успешно" : "Не успешно";
+                document.Save();
+            }
+        }
+}
+
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="Module4.MainWindow"
+        Title="Валидация данных"
+        Height="200" Width="600" WindowStartupLocation="CenterScreen">
+    <Grid ColumnDefinitions="*,*" RowDefinitions="*,*">
+        <Button Grid.Column="0" Grid.Row="0" Width="210" 
+                HorizontalAlignment="Center" HorizontalContentAlignment="Center"  
+                Content="Получить данные" Click="GetDataFromApi_OnClick"></Button>
+        <TextBlock Name="DataFromApiTextBlock" Grid.Column="1" Grid.Row="0" VerticalAlignment="Center" 
+                   HorizontalAlignment="Center"></TextBlock>
+        <Button Grid.Column="0" Grid.Row="1" Width="210" HorizontalAlignment="Center" 
+                HorizontalContentAlignment="Center"
+                Content="Отправить результат теста" Click="WriteInDoc_OnClick"></Button>
+        <TextBlock Name="TestResultTextBlock" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" 
+                   HorizontalAlignment="Center"></TextBlock>
+    </Grid>
+</Window>
