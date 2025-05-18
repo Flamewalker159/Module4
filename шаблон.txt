@@ -3,58 +3,89 @@ https://labs.perplexity.ai/
 https://github.com/Flamewalker159/Module4.git
 -- 📦 СОЗДАНИЕ ТАБЛИЦ
 
--- Таблица: Гости
-CREATE TABLE guests (
-    guest_id SERIAL PRIMARY KEY,
-    full_name VARCHAR(100) NOT NULL,
-    birth_date DATE,
-    phone VARCHAR(20),
-    email VARCHAR(100) UNIQUE,
-    passport_number CHAR(10),
-    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+create table category (
+	id serial primary key,
+	name varchar(50)
 );
 
--- Таблица: Типы номеров
-CREATE TABLE room_types (
-    room_type_id SERIAL PRIMARY KEY,
-    type_name VARCHAR(50),
-    price_per_night NUMERIC(10, 2)
+create table status (
+	id serial primary key,
+	name varchar(50)
 );
 
--- Таблица: Номера
-CREATE TABLE rooms (
-    room_id SERIAL PRIMARY KEY,
-    room_number VARCHAR(10) UNIQUE NOT NULL,
-    room_type_id INT REFERENCES room_types(room_type_id),
-    status VARCHAR(20) CHECK (status IN ('Свободен', 'Занят', 'Назначен к уборке', 'Чистый', 'Грязный'))
+create table role (
+	id serial primary key,
+	name varchar(50)
 );
 
--- Таблица: Сотрудники
-CREATE TABLE employees (
-    employee_id SERIAL PRIMARY KEY,
-    full_name VARCHAR(100),
-    role VARCHAR(50),
-    hire_date DATE
+create table employees (
+	id serial primary key,
+	login varchar(50),
+	password varchar(255),
+	idRole int,
+	surname varchar(50),
+	name varchar(50),
+	patronymic varchar(50),
+	foreign key (idRole) references role(id)
 );
 
--- Таблица: Бронирования
-CREATE TABLE bookings (
-    booking_id SERIAL PRIMARY KEY,
-    guest_id INT REFERENCES guests(guest_id),
-    room_id INT REFERENCES rooms(room_id),
-    check_in_date DATE,
-    check_out_date DATE,
-    total_amount NUMERIC(10, 2),
-    payment_status BOOLEAN DEFAULT FALSE
+create table numberFond (
+	id serial primary key,
+	floor int,
+	number int,
+	idCategory int,
+	idStatus int,
+	price money,
+	foreign key (idCategory) references category(id),
+	foreign key (idStatus) references status(id)
 );
 
--- Таблица: Уборка
-CREATE TABLE cleaning (
-    cleaning_id SERIAL PRIMARY KEY,
-    room_id INT REFERENCES rooms(room_id),
-    employee_id INT REFERENCES employees(employee_id),
-    cleaning_date DATE,
-    status VARCHAR(20) CHECK (status IN ('Назначена', 'Выполнена'))
+create table cleaningSchedule (
+	id serial primary key,
+	dateAndTimeOfCleaning timestamp,
+	idEmployee int,
+	idNumberFond int,
+	foreign key (idEmployee) references employees(id),
+	foreign key (idNumberFond) references numberFond(id)
+);
+
+create table client (
+	id serial primary key,
+	surname varchar(50),
+	name varchar(50),
+	patronymic varchar(50)
+);
+
+create table reservation (
+	id serial primary key,
+	idClient int,
+	idNumberFond int,
+	dateOfEntry date,
+	departureDate date,
+	idStatus int,
+	foreign key (idClient) references client(id),
+	foreign key (idNumberFond) references numberFond(id),
+	foreign key (idStatus) references status(id)
+);
+
+create table service (
+	id serial primary key,
+	name varchar(50),
+	price money,
+	description varchar(50)
+);
+
+create table contract(
+	id serial primary key,
+	idStatus int,
+	idEmployee int,
+	comment varchar(255),
+	idReservation int,
+	idService int,
+	foreign key (idStatus) references status(id),
+	foreign key (idEmployee) references employees(id),
+	foreign key (idReservation) references reservation(id),
+	foreign key (idService) references service(id)
 );
 
 -- 📊 АГРЕГАТНЫЕ ЗАПРОСЫ С ФОРМУЛАМИ

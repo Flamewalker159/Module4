@@ -43,7 +43,7 @@ public partial class MainWindow : Window
         TestResultTextBlock.Text = validationResult ? "не содержит запрещенные символы" : "содержит запрещенные символы";
         try
         {
-            using var doc = WordprocessingDocument.Open("ТестКейс.docx", true); 
+            using var doc = WordprocessingDocument.Open("ТестКейс.docx", true);
             var document = doc.MainDocumentPart!.Document;
 
             if (document.Descendants<Text>().FirstOrDefault(t => t.Text.Contains("Result 1")) != null)
